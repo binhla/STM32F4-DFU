@@ -1,4 +1,6 @@
 #include "bootloader_process.h"
+#include "debug.h"
+#include "hex_record.h"
 
 #define EnablePrivilegedMode() __asm("SVC #0")
 
@@ -45,4 +47,26 @@ void boot_jump(uint32_t *addr) {
 	SCB->VTOR = ( uint32_t )addr ;
 	
 	BootJumpASM( addr[ 0 ], addr[ 1 ] ) ;
+}
+
+void boot_process_line(const uint8_t *pBuffer, uint16_t length) {
+	static sRecord_t record;
+	while (length > 0) {
+		if (pBuffer[0] == RECORD_SOF && pBuffer[1] != RECORD_SOF) {
+			break;
+		}
+		length--;
+		pBuffer++;
+	}
+	if (!record_check(pBuffer, length, &record)) {
+		return;
+	}
+	LREP(__func__, "len %d: %s", length, (char *)pBuffer);
+	
+	//todo:
+	//process with every record type
+	switch(record.type) {
+		default:
+			break;
+	}	
 }

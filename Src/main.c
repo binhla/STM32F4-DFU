@@ -73,6 +73,19 @@ void led_indicate(void);
 char compile_date[] = "Compile Date: " __DATE__; 
 char compile_time[] = "Compile Time: " __TIME__; 
 
+typedef struct {
+	uint8_t xC;
+	uint8_t buffer[256];
+	uint16_t count;
+} sSerialData_t;
+/*
+struct {
+	uint8_t xC;
+	uint8_t rx_buffer[256];
+	uint16_t rx_count;
+} uart1_data;
+*/
+sSerialData_t uart1_rx;
 /* USER CODE END 0 */
 
 int main(void)
@@ -104,16 +117,11 @@ int main(void)
   MX_USART2_UART_Init();
 
   /* USER CODE BEGIN 2 */
-	static uint32_t sysTick = 0;
-	/*
-	app_debug_put_string(compile_date);
-	app_debug_put_string("\r\n");
-	app_debug_put_string(compile_time);
-	app_debug_put_string("\r\n");
-	*/
 	LREP_INFO(__func__, "%s", compile_date);
 	LREP(__func__, "%s", compile_time);
-	
+	static uint32_t sysTick = 0;
+	memset(&uart1_rx, 0, sizeof(sSerialData_t));
+	HAL_UART_Receive_IT(&huart1, &uart1_rx.xC, 1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -281,6 +289,28 @@ void led_indicate(void) {
 	}
 	else led_count = 0;
 }
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+	if (huart->Instance == USART1) {
+		uart1_rx.buffer[uart1_rx.count++] = uart1_rx.xC;
+		if (uart1_rx.xC == RECORD_EOF) {	
+			boot_process_line(uart1_rx.buffer, uart1_rx.count);
+			memset(&uart1_rx, 0, sizeof(sSerialData_t));
+		}
+		else if (uart1_rx.count > 255) {
+			LREP_WARNING("UART1_RX_CB", "msg too long");
+			memset(&uart1_rx, 0, sizeof(sSerialData_t));
+		}
+		HAL_UART_Receive_IT(&huart1, (uint8_t*)&uart1_rx.xC, 1);
+	}		
+}
+
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
+	if (huart->Instance == USART1) {
+		HAL_UART_Receive_IT(&huart1, (uint8_t*)&uart1_rx.xC, 1);
+	}
+}
+
 /* USER CODE END 4 */
 
 /**

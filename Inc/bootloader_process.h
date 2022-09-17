@@ -2,6 +2,7 @@
 #define __BOOTLOADER_PROCESS_H
 
 #include "config.h"
+#include "intel_hex_mod_format.h"
 
 //#define		BOOT_SIZE				0x4000
 //#define CONFIG_START_ADDRESS 0x08004000
@@ -12,5 +13,7 @@
 typedef  void (*pFunction)(void);
 
 void boot_jump(uint32_t *addr);
+
+void boot_process_line(const uint8_t *pBuffer, uint16_t length);
 
 #endif
