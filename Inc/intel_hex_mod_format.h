@@ -46,7 +46,7 @@ typedef enum {
 
 typedef struct {
 	uint8_t data_length;
-	uint8_t address;
+	uint16_t address;
 	uint8_t type;
 	uint8_t data_buff[256];
 	uint8_t crc;

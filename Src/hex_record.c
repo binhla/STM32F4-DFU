@@ -26,11 +26,11 @@ uint8_t record_get_u8(const uint8_t *pBuffer) {
 	u8Data |= hex_digit(pBuffer[1]);
 	return u8Data;
 }
-uint8_t record_get_u16(const uint8_t *pBuffer) {
+uint16_t record_get_u16(const uint8_t *pBuffer) {
 	uint16_t u16Data = 0;
 	for (int i=0; i<4; ++i) {
 		u16Data <<= 4;
-		u16Data |= hex_digit(pBuffer[0]);
+		u16Data |= hex_digit(pBuffer[i]);
 	}
 	return u16Data;
 }
@@ -99,9 +99,9 @@ bool record_check(const uint8_t *pBuffer, uint16_t length, sRecord_t *pRecord) {
 	}
 	
 	/*debug*/
-	LREP_INFO(__func__, "record type %d", pRecord->type);
-	LREP_INFO(__func__, "record address %d", pRecord->address);
-	LREP_INFO(__func__, "record data length %d", pRecord->data_length);
+	LREP_INFO(__func__, "record type 0x%02X", pRecord->type);
+	LREP_INFO(__func__, "record address 0x%04X", pRecord->address);
+	LREP_INFO(__func__, "record data length 0x%02X %d ", pRecord->data_length, pRecord->data_length);
 	for (int i=0; i < pRecord->data_length; ++i) {
 		app_log_write("%02X ", pRecord->data_buff[0]);
 	} app_log_write("\r\n");
@@ -109,15 +109,21 @@ bool record_check(const uint8_t *pBuffer, uint16_t length, sRecord_t *pRecord) {
 	return true;
 }
 
+#define LOG_CRC(__DATA) app_log_write("0x%02X 0x%02X \r\n", __DATA, u8CRC)
+
 uint8_t record_cal_crc(const sRecord_t *pRecord) {	
 	uint8_t u8CRC = 0;
 	u8CRC += pRecord->data_length;
-	u8CRC += (pRecord->address >> 8);
-	u8CRC += (pRecord->address & 0x00FF);
+	uint8_t address_msb = pRecord->address >> 8;
+	uint8_t address_lsb = pRecord->address & 0x00FF;
+	u8CRC += address_msb;
+	u8CRC += address_lsb;
 	u8CRC += pRecord->type;
-	for (int i =0; i< pRecord->data_length; ++i)
+	LOG_CRC(pRecord->type);
+	for (int i =0; i< pRecord->data_length; ++i) {
 		u8CRC += pRecord->data_buff[i];
-	u8CRC = !u8CRC;
+	}
+	u8CRC = ~u8CRC;
 	u8CRC += 1;
 	return u8CRC;
 }

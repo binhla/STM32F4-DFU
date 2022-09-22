@@ -132,14 +132,21 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
 		sysTick = HAL_GetTick();
+		#if 0
 		if (sysTick > 10000) {
 			//JUMP_TO_APP(APP_START_ADDRESS);
+			HAL_UART_DeInit(&huart1);
+			HAL_UART_DeInit(&huart2);
 			boot_jump(( uint32_t * )APP_START_ADDRESS);
 		}
 		else {
 			led_indicate();
 			HAL_Delay(100);
 		}
+		#else
+			led_indicate();
+			HAL_Delay(100);
+		#endif
   }
   /* USER CODE END 3 */
 
