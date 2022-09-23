@@ -44,6 +44,11 @@ typedef enum {
 } hex_record_t;
 
 
+#define RECORD_MSG_BOOTHOOK 		":00000011EF#"
+#define RECORD_MSG_ACK					":00000012EE#"
+#define RECORD_MSG_NACK					":00000013ED#"
+#define RECORD_MSG_REBOOT				":00000015EB#"
+
 typedef struct {
 	uint8_t data_length;
 	uint16_t address;

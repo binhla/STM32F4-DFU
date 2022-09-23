@@ -3,6 +3,8 @@
 
 #include "config.h"
 #include "intel_hex_mod_format.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 //#define		BOOT_SIZE				0x4000
 //#define CONFIG_START_ADDRESS 0x08004000
@@ -14,6 +16,25 @@ typedef  void (*pFunction)(void);
 
 void boot_jump(uint32_t *addr);
 
+typedef struct {
+	bool 			bBoothooked;
+	uint32_t 	u32BaseAddress;
+	uint32_t 	u32WriteAddress;
+	int 			sector;
+} sDFU_Control_t;
+
+extern sDFU_Control_t g_DFU_Control;
+
+void boot_process_init(void);
 void boot_process_line(const uint8_t *pBuffer, uint16_t length);
+
+#define UART_DFU huart1
+#define DFU_UART_INSTANCE USART1
+
+void boot_process_send_ack(void);
+void boot_process_send_nack(void);
+
+int boot_process_get_sector(uint32_t address);
+int boot_process_verify_address(uint32_t address);
 
 #endif

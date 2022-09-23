@@ -121,6 +121,7 @@ int main(void)
 	LREP(__func__, "%s", compile_time);
 	static uint32_t sysTick = 0;
 	memset(&uart1_rx, 0, sizeof(sSerialData_t));
+	boot_process_init();
 	HAL_UART_Receive_IT(&huart1, &uart1_rx.xC, 1);
   /* USER CODE END 2 */
 
@@ -132,8 +133,8 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
 		sysTick = HAL_GetTick();
-		#if 0
-		if (sysTick > 10000) {
+		#if 1
+		if (sysTick > 5000 && !g_DFU_Control.bBoothooked) {
 			//JUMP_TO_APP(APP_START_ADDRESS);
 			HAL_UART_DeInit(&huart1);
 			HAL_UART_DeInit(&huart2);

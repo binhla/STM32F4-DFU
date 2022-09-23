@@ -97,15 +97,16 @@ bool record_check(const uint8_t *pBuffer, uint16_t length, sRecord_t *pRecord) {
 		LREP_ERROR(__func__, "crc error 0x%02X 0x%02X", pRecord->crc, cal_crc);
 		return false;
 	}
-	
+	#if 0
 	/*debug*/
-	LREP_INFO(__func__, "record type 0x%02X", pRecord->type);
-	LREP_INFO(__func__, "record address 0x%04X", pRecord->address);
-	LREP_INFO(__func__, "record data length 0x%02X %d ", pRecord->data_length, pRecord->data_length);
+	LREP(__func__, "record type 0x%02X", pRecord->type);
+	LREP(__func__, "record address 0x%04X", pRecord->address);
+	LREP(__func__, "record data length 0x%02X %d ", pRecord->data_length, pRecord->data_length);
+	if (pRecord->data_length == 0) return true;
 	for (int i=0; i < pRecord->data_length; ++i) {
 		app_log_write("%02X ", pRecord->data_buff[0]);
 	} app_log_write("\r\n");
-	
+	#endif
 	return true;
 }
 
