@@ -14,7 +14,7 @@
 
 typedef  void (*pFunction)(void);
 
-void boot_jump(uint32_t *addr);
+void boot_jump(uint32_t addr);
 
 typedef struct {
 	bool 			bBoothooked;
