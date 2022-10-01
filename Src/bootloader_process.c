@@ -33,7 +33,7 @@ void boot_process_line(const uint8_t *pBuffer, uint16_t length) {
 		length--;
 		pBuffer++;
 	}
-	#if 1
+	#if PROCESS_DEBUG
 	for (int i=0; i< length; ++i) {
 		app_log_write("%c", pBuffer[i]);
 	} app_log_write("\r\n");
@@ -42,7 +42,7 @@ void boot_process_line(const uint8_t *pBuffer, uint16_t length) {
 		boot_process_send_nack();
 		return;
 	}
-	LREP_INFO(__func__, "len %d: %s", length, (char *)pBuffer);
+	//LREP_INFO(__func__, "len %d: %s", length, (char *)pBuffer);
 	
 	//process with every record type
 	switch(record.type) {
@@ -82,17 +82,20 @@ void boot_process_line(const uint8_t *pBuffer, uint16_t length) {
 		} break;
 		case HEX_RECORD_DATA: {
 			g_DFU_Control.u32WriteAddress = g_DFU_Control.u32BaseAddress + record.address;
+			#if PROCESS_DEBUG
 			LREP_WARNING(__func__, "Record data 0x%08X", g_DFU_Control.u32WriteAddress);
 			app_log_write("\t\t");
 			for (int i=0; i<record.data_length; ++i) {
 				if (i%4 == 0) app_log_write(" ");
 				app_log_write("%02X", record.data_buff[i]);
 			} app_log_write("\r\n");
+			#endif
 			if (boot_process_verify_address(g_DFU_Control.u32WriteAddress) != 0) {
 				boot_process_send_nack();
 				break;
 			}
 			bool ret = false;
+			#if 0
 			uint16_t u16FlashData = 0;
 			for (int i=0; i<record.data_length; i+=2) {
 				if (boot_process_verify_address(g_DFU_Control.u32WriteAddress + i) != 0) {
@@ -111,7 +114,18 @@ void boot_process_line(const uint8_t *pBuffer, uint16_t length) {
 				
 				ret = true;
 			}
-			
+			#else
+			if (boot_process_verify_address(g_DFU_Control.u32WriteAddress) == 0) {
+				for (int i=0; i<record.data_length; i+=4) {					
+					if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, g_DFU_Control.u32WriteAddress + i, *(uint32_t *)(record.data_buff+i)) != HAL_OK) {
+						LREP_ERROR(__func__, "Flash write error @0x%08X", g_DFU_Control.u32WriteAddress + i);
+						ret = false; break;
+					}					
+					ret = true;
+				}
+			}
+			else ret = false;
+			#endif
 			if (ret == false) boot_process_send_nack();
 			else boot_process_send_ack();
 		} break;
@@ -136,7 +150,7 @@ void boot_process_line(const uint8_t *pBuffer, uint16_t length) {
 }
 
 void boot_process_send_ack(void) {
-	LREP(__func__, "Send ACK");
+	//LREP(__func__, "Send ACK");
 	const char *str = RECORD_MSG_ACK;
 	HAL_UART_Transmit(&UART_DFU, (uint8_t *)str, RECORD_MINIMUM_LENGTH, 0xFFFF);
 }

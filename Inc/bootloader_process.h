@@ -23,6 +23,8 @@ typedef struct {
 	int 			sector;
 } sDFU_Control_t;
 
+#define PROCESS_DEBUG 0
+
 extern sDFU_Control_t g_DFU_Control;
 
 void boot_process_init(void);

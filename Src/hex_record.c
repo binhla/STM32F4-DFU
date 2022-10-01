@@ -120,7 +120,6 @@ uint8_t record_cal_crc(const sRecord_t *pRecord) {
 	u8CRC += address_msb;
 	u8CRC += address_lsb;
 	u8CRC += pRecord->type;
-	LOG_CRC(pRecord->type);
 	for (int i =0; i< pRecord->data_length; ++i) {
 		u8CRC += pRecord->data_buff[i];
 	}
