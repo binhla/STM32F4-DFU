@@ -28,9 +28,6 @@ extern sDFU_Control_t g_DFU_Control;
 void boot_process_init(void);
 void boot_process_line(const uint8_t *pBuffer, uint16_t length);
 
-#define UART_DFU huart1
-#define DFU_UART_INSTANCE USART1
-
 void boot_process_send_ack(void);
 void boot_process_send_nack(void);
 

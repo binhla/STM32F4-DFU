@@ -3,9 +3,6 @@
 
 #include "config.h"
 
-#define UART_DEBUG huart2
-#define DEBUG_UART_INSTANCE USART2
-
 void app_debug_put_string(char *str);
 void app_debug_put_buffer(uint8_t *pBuffer, int len);
 

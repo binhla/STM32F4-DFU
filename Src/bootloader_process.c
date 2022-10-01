@@ -33,7 +33,13 @@ void boot_process_line(const uint8_t *pBuffer, uint16_t length) {
 		length--;
 		pBuffer++;
 	}
+	#if 1
+	for (int i=0; i< length; ++i) {
+		app_log_write("%c", pBuffer[i]);
+	} app_log_write("\r\n");
+	#endif
 	if (!record_check(pBuffer, length, &record)) {
+		boot_process_send_nack();
 		return;
 	}
 	LREP_INFO(__func__, "len %d: %s", length, (char *)pBuffer);
@@ -92,6 +98,7 @@ void boot_process_line(const uint8_t *pBuffer, uint16_t length) {
 				if (boot_process_verify_address(g_DFU_Control.u32WriteAddress + i) != 0) {
 					ret = false; break;
 				}
+				
 				u16FlashData = *(__IO uint16_t *)(g_DFU_Control.u32WriteAddress + i);
 				if (u16FlashData == *(uint16_t*)(record.data_buff+i)) {
 					ret = true; continue;

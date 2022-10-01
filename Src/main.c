@@ -85,7 +85,7 @@ struct {
 	uint16_t rx_count;
 } uart1_data;
 */
-sSerialData_t uart1_rx;
+sSerialData_t dfu_rx;
 /* USER CODE END 0 */
 
 int main(void)
@@ -120,9 +120,9 @@ int main(void)
 	LREP_INFO(__func__, "%s", compile_date);
 	LREP(__func__, "%s", compile_time);
 	static uint32_t sysTick = 0;
-	memset(&uart1_rx, 0, sizeof(sSerialData_t));
+	memset(&dfu_rx, 0, sizeof(sSerialData_t));
 	boot_process_init();
-	HAL_UART_Receive_IT(&huart1, &uart1_rx.xC, 1);
+	HAL_UART_Receive_IT(&UART_DFU, &dfu_rx.xC, 1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -141,12 +141,15 @@ int main(void)
 			boot_jump((uint32_t)APP_START_ADDRESS);
 		}
 		else {
-			led_indicate();
+			//led_indicate();
+			LREP(__func__, "bootloader app");
 			HAL_Delay(100);
 		}
 		#else
-			led_indicate();
-			HAL_Delay(100);
+			//led_indicate();
+			LREP(__func__, "bootloader app");
+			HAL_Delay(1000);
+			//HAL_Delay(100);
 		#endif
   }
   /* USER CODE END 3 */
@@ -155,7 +158,6 @@ int main(void)
 
 /** System Clock Configuration
 */
-#if 0
 void SystemClock_Config(void)
 {
 
@@ -208,47 +210,6 @@ void SystemClock_Config(void)
 
   /* SysTick_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
-}
-#endif
-void SystemClock_Config(void)
-{
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-
-  /** Configure the main internal regulator output voltage
-  */
-  __HAL_RCC_PWR_CLK_ENABLE();
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-
-  /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 336;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 7;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
-
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
-  {
-    Error_Handler();
-  }
 }
 
 /* USART1 init function */
@@ -341,23 +302,23 @@ void led_indicate(void) {
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	if (huart->Instance == USART1) {
-		uart1_rx.buffer[uart1_rx.count++] = uart1_rx.xC;
-		if (uart1_rx.xC == RECORD_EOF) {	
-			boot_process_line(uart1_rx.buffer, uart1_rx.count);
-			memset(&uart1_rx, 0, sizeof(sSerialData_t));
+	if (huart->Instance == DFU_UART_INSTANCE) {
+		dfu_rx.buffer[dfu_rx.count++] = dfu_rx.xC;
+		if (dfu_rx.xC == RECORD_EOF) {	
+			boot_process_line(dfu_rx.buffer, dfu_rx.count);
+			memset(&dfu_rx, 0, sizeof(sSerialData_t));
 		}
-		else if (uart1_rx.count > 255) {
-			LREP_WARNING("UART1_RX_CB", "msg too long");
-			memset(&uart1_rx, 0, sizeof(sSerialData_t));
+		else if (dfu_rx.count > 255) {
+			LREP_WARNING("UART2_RX_CB", "msg too long");
+			memset(&dfu_rx, 0, sizeof(sSerialData_t));
 		}
-		HAL_UART_Receive_IT(&huart1, (uint8_t*)&uart1_rx.xC, 1);
+		HAL_UART_Receive_IT(&UART_DFU, (uint8_t*)&dfu_rx.xC, 1);
 	}		
 }
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
-	if (huart->Instance == USART1) {
-		HAL_UART_Receive_IT(&huart1, (uint8_t*)&uart1_rx.xC, 1);
+	if (huart->Instance == DFU_UART_INSTANCE) {
+		HAL_UART_Receive_IT(&UART_DFU, (uint8_t*)&dfu_rx.xC, 1);
 	}
 }
 
