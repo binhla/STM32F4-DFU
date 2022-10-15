@@ -25,6 +25,8 @@ void app_debug_put_buffer(uint8_t *pBuffer, int len);
 
 #define LOG_FORMAT(letter, format) LOG_COLOR_ ## letter #letter ":(%u) [%s]: " format LOG_RESET_COLOR "\r\n"
 
+#define DEBUG_ENB 0
+
 typedef enum {
     APP_LOG_NONE,
     APP_LOG_ERROR,
@@ -40,13 +42,21 @@ typedef enum {
 		else if (level == APP_LOG_DEBUG)    { app_log_write(LOG_FORMAT(D, format), app_log_get_time(), tag, ##__VA_ARGS__ );}\
 } while(0)
 		
+#if DEBUG_ENB
 #define LREP(tag, format, ...)              APP_LOG_LEVEL(APP_LOG_DEBUG, tag, format, ##__VA_ARGS__)
 #define LREP_INFO(tag, format, ...)         APP_LOG_LEVEL(APP_LOG_INFO, tag, format, ##__VA_ARGS__)
 #define LREP_WARNING(tag, format, ...)      APP_LOG_LEVEL(APP_LOG_WARN, tag, format, ##__VA_ARGS__)
 #define LREP_ERROR(tag, format, ...)        APP_LOG_LEVEL(APP_LOG_ERROR, tag, format, ##__VA_ARGS__)
-		
+
+#else
+#define LREP(tag, format, ...)              __nop()
+#define LREP_INFO(tag, format, ...)         __nop()
+#define LREP_WARNING(tag, format, ...)      __nop()
+#define LREP_ERROR(tag, format, ...)        __nop()
+#endif
+
 void app_log_write(const char * format, ...) __attribute__ ((format (printf, 1, 2)));
-		
+
 		
 uint32_t app_log_get_time(void);
 		

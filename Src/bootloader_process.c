@@ -95,7 +95,7 @@ void boot_process_line(const uint8_t *pBuffer, uint16_t length) {
 				break;
 			}
 			bool ret = false;
-			#if 0
+			#if 1
 			uint16_t u16FlashData = 0;
 			for (int i=0; i<record.data_length; i+=2) {
 				if (boot_process_verify_address(g_DFU_Control.u32WriteAddress + i) != 0) {

@@ -9,8 +9,8 @@ def process_hex_file(hex_file, com_port):
         return False
     print("continue process")
     file.close()
-    uart.baudrate = 115200
-    #uart.baudrate = 921600
+    #uart.baudrate = 115200
+    uart.baudrate = 57600
     uart.port = com_port
     uart.open()
     boothook_count = 0
@@ -57,7 +57,7 @@ def process_line(uart, line):
         if uart_wait_ack(uart, 1):
             return True
         try_count += 1
-        if try_count >= 5:
+        if try_count >= 10:
             break;
     return False
 
@@ -99,15 +99,18 @@ def uart_wait_ack(uart, time_out):
     nack_msg = ":00000013ED#"
     uart.timeout = time_out
     rx_bytes = uart.read_until(expected=b'#');
-    rx_str = str(rx_bytes, 'utf-8')
-    ack_idx = rx_str.find(ack_msg)
-    if (ack_idx != -1):
-        return True
-    nack_idx = rx_str.find(nack_msg)
-    if (nack_idx == -1):
-        print("Error: timeout")
-    else:
-        print("Error: receive NACK")
+    try:
+	    rx_str = str(rx_bytes, 'utf-8')
+	    ack_idx = rx_str.find(ack_msg)
+	    if (ack_idx != -1):
+	        return True
+	    nack_idx = rx_str.find(nack_msg)
+	    if (nack_idx == -1):
+	        print("Error: timeout")
+	    else:
+	        print("Error: receive NACK")
+    except UnicodeError:
+	    print("Error: Unicode error")
     return False
 
 def uart_send_hex_line(uart, line):
@@ -122,6 +125,6 @@ def uart_send_reboot(uart):
     return
 
 if __name__ == "__main__":
-    #process_hex_file("blink.hex", "COM9")
-    process_hex_file("VOR02_FIRMWARE_DEV.hex", "COM9")
+    #process_hex_file("blink.hex", "COM11")
+    process_hex_file("VOR02_FIRMWARE_DEV.hex", "COM5")
 
