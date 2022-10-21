@@ -69,6 +69,7 @@ static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN 0 */
 
 void led_indicate(void);
+void dfu_reinit(void);
 
 char compile_date[] = "Compile Date: " __DATE__; 
 char compile_time[] = "Compile Time: " __TIME__; 
@@ -86,6 +87,7 @@ struct {
 } uart1_data;
 */
 sSerialData_t dfu_rx;
+int xCount = 0;
 /* USER CODE END 0 */
 
 int main(void)
@@ -143,28 +145,19 @@ int main(void)
 			HAL_UART_DeInit(&huart1);
 			#endif
 			HAL_UART_DeInit(&huart2);
-//			HAL_GPIO_DeInit(GPIOD, GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15);
-//			__HAL_RCC_GPIOH_CLK_DISABLE();
-//			__HAL_RCC_GPIOA_CLK_DISABLE();
-//			__HAL_RCC_GPIOD_CLK_DISABLE();
-			
-//			HAL_NVIC_DisableIRQ(DMA1_Stream5_IRQn);
-//			__HAL_RCC_DMA1_CLK_DISABLE();
 			boot_jump((uint32_t)APP_START_ADDRESS);
 		}
 		else {
 			//led_indicate();
-			LREP(__func__, "bootloader app");
-			HAL_Delay(100);
+			HAL_Delay(1000);
+			LREP(__func__, "bootloader app %d", xCount);
+			if (xCount == 0) dfu_reinit();
+			xCount = 0;
 		}
 		#else
-			//led_indicate();
-		
 		LREP(__func__, "bootloader app");
 		HAL_UART_Receive_IT(&UART_DFU, (uint8_t*)&dfu_rx.xC, 1);	
 		HAL_Delay(100);
-			
-			//HAL_Delay(100);
 		#endif
   }
   /* USER CODE END 3 */
@@ -287,13 +280,13 @@ static void MX_USART2_UART_Init(void)
 {
 
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 57600; //57600;//115200;
+  huart2.Init.BaudRate = 115200; //57600;//115200;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Parity = UART_PARITY_NONE; //UART_PARITY_EVEN; //UART_PARITY_NONE;
   huart2.Init.Mode = UART_MODE_TX_RX;
   huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16; //UART_OVERSAMPLING_16;
   if (HAL_UART_Init(&huart2) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -355,6 +348,7 @@ void led_indicate(void) {
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if (huart->Instance == DFU_UART_INSTANCE) {
+		xCount++;
 		dfu_rx.buffer[dfu_rx.count++] = dfu_rx.xC;
 		if (dfu_rx.xC == RECORD_EOF) {	
 			boot_process_line(dfu_rx.buffer, dfu_rx.count);
@@ -370,18 +364,22 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
 	if (huart->Instance == DFU_UART_INSTANCE) {
-		LREP_ERROR(__func__, "DFU UART Error");
+		LREP_ERROR(__func__, "DFU UART Error %d", huart->ErrorCode);
 		
-		if (HAL_UART_DeInit(&UART_DFU) != HAL_OK) {
-			LREP_ERROR(__func__, "Deinit error");
-		}
-		if (HAL_UART_Init(&UART_DFU) != HAL_OK) {
-			LREP_ERROR(__func__, "Init error");
-		}
-		
-		HAL_UART_Receive_IT(&UART_DFU, (uint8_t*)&dfu_rx.xC, 1);
+		//dfu_reinit();
 		//HAL_UART_Receive_DMA(&UART_DFU, &dfu_rx.xC, 1);
 	}
+}
+
+void dfu_reinit(void) {
+	if (HAL_UART_DeInit(&UART_DFU) != HAL_OK) {
+		LREP_ERROR(__func__, "Deinit error");
+	}
+	if (HAL_UART_Init(&UART_DFU) != HAL_OK) {
+		LREP_ERROR(__func__, "Init error");
+	}
+	
+	HAL_UART_Receive_IT(&UART_DFU, (uint8_t*)&dfu_rx.xC, 1);
 }
 
 /* USER CODE END 4 */
