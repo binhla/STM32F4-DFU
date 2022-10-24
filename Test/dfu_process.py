@@ -1,4 +1,5 @@
 import serial
+import sys, getopt
 
 def process_hex_file(hex_file, com_port):
     uart = serial.Serial()
@@ -129,7 +130,28 @@ def uart_send_reboot(uart):
     uart.write(reboot_msg.encode('utf-8'))
     return
 
+def main(argv):
+    try:
+        opts, args = getopt.getopt(argv, "p:f:", ["port = ", "file = "])
+    except:
+        print(sys.argv[0] + " -p <COM_PORT> -f <Hex File>")
+        sys.exit()
+    com_port = ""
+    hex_file = ""
+    for opt, arg in opts:
+        if opt == '-p':
+            com_port = arg
+        elif opt == '-f':
+            hex_file = arg
+    if not com_port or not hex_file:
+        print(sys.argv[0] + " -p <COM_PORT> -f <Hex File>")
+        sys.exit()
+    process_hex_file(hex_file, com_port)
+		
+
 if __name__ == "__main__":
-    #process_hex_file("blink.hex", "COM11")
-    process_hex_file("VOR02_FIRMWARE_DEV.hex", "COM5")
+    main(sys.argv[1:])
+	#py dfu_process.py -p com7 -f blink_iwdg.hex
+	#py dfu_process.py -p com7 -f blink.hex
+    #py dfu_process.py -p com7 -f VOR02_FIRMWARE_DEV.hex
 
