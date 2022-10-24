@@ -9,9 +9,14 @@ def process_hex_file(hex_file, com_port):
         return False
     print("continue process")
     file.close()
-    #uart.baudrate = 115200
-    uart.baudrate = 57600
+    uart.baudrate = 115200
+    #uart.baudrate = 57600
+    #uart.baudrate = 460800
+    #uart.baudrate = 1152000
+    #uart.stopbits = serial.STOPBITS_TWO
     uart.port = com_port
+    #uart.xonxoff  = True
+    #uart.parity  = serial.PARITY_EVEN
     uart.open()
     boothook_count = 0
     while True:
